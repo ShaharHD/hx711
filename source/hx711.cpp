@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <inttypes.h>
+#ifdef __arm__
 #include <wiringPi.h>
-
+#endif
 #include "hx711.h"
 
 HX711::HX711(uint8_t clockPin, uint8_t dataPin) :
@@ -11,15 +12,21 @@ HX711::HX711(uint8_t clockPin, uint8_t dataPin) :
   mClockPin(clockPin),
   mDataPin(dataPin)
 {
+#ifdef __arm__
   wiringPiSetupPhys();
 
   pinMode(mClockPin, OUTPUT);
   pinMode(mDataPin, INPUT);
+#endif
 }
 
 bool HX711::isReady()
 {
+#ifdef __arm__
   return digitalRead(mDataPin) == LOW;
+#else
+  return true;
+#endif
 }
 
 void HX711::setGain(uint8_t gain)
@@ -40,12 +47,15 @@ void HX711::setGain(uint8_t gain)
     break;
   }
 
+#ifdef __arm__
   digitalWrite(mClockPin, LOW);
   read();
+#endif
 }
 
 int32_t HX711::read()
 {
+#ifdef __arm__
   // wait for the chip to become ready
   while (!this->isReady());
 
@@ -74,16 +84,23 @@ int32_t HX711::read()
   }
 
   return data;
+#else
+  return 0;
+#endif
 }
 
 int32_t HX711::readAverage(uint8_t times)
 {
+#ifdef __arm__
   int64_t sum = 0;
   for (uint8_t i = 0; i < times; i++)
   {
     sum += read();
   }
   return sum / times;
+#else
+  return 0;
+#endif
 }
 
 int32_t HX711::getRawValue(uint8_t times)
@@ -114,13 +131,17 @@ void HX711::setOffset(int32_t offset)
 
 void HX711::powerDown()
 {
+#ifdef __arm__
   digitalWrite(mClockPin, LOW);
   digitalWrite(mClockPin, HIGH);
+#endif
 }
 
 void HX711::powerUp()
 {
+#ifdef __arm__
   digitalWrite(mClockPin, LOW);
+#endif
 }
 
 int32_t HX711::getOffset()
